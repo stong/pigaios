@@ -31,6 +31,7 @@ import sqlite3
 from idc import *
 from idaapi import *
 from idautils import *
+from ida_nalt import get_switch_info
 
 from others.tarjan_sort import strongly_connected_components
 
@@ -425,7 +426,7 @@ class CBinaryToSourceExporter:
     old_externals = set(externals)
     ignored_size, ins = diaphora_decode(ea)
 
-    for oper in list(ins.Operands):
+    for oper in list(ins.ops):
       if oper.type == o_imm:
         if is_constant(oper, ea) and constant_filter(oper.value):
           constants.add(oper.value)
@@ -458,7 +459,7 @@ class CBinaryToSourceExporter:
     return constants, externals, globals_uses
 
   def parse_switches(self, ea, switches):
-    switch = get_switch_info_ex(ea)
+    switch = get_switch_info(ea)
     if switch:
       switch_cases = switch.get_jtable_size()
       results = calc_switch_cases(ea, switch)
