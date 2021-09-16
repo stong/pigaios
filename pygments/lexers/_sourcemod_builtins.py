@@ -12,7 +12,7 @@
     :license: BSD, see LICENSE for details.
 """
 
-from __future__ import print_function
+
 
 FUNCTIONS = (
     'OnEntityCreated',
@@ -1097,7 +1097,7 @@ if __name__ == '__main__':  # pragma: no cover
     import re
     import sys
     try:
-        from urllib import FancyURLopener
+        from urllib.request import FancyURLopener
     except ImportError:
         from urllib.request import FancyURLopener
 

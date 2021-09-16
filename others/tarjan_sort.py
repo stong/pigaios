@@ -98,5 +98,5 @@ if __name__ == '__main__':
 
   d = {0 : [1, 2, 4], 1 : [3, 4], 2 : [0, 3], 3 : [], 4: [1]}
   print(d)
-  print("scc", strongly_connected_components(d))
-  print("rts", robust_topological_sort(d))
+  print(("scc", strongly_connected_components(d)))
+  print(("rts", robust_topological_sort(d)))

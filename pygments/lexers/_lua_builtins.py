@@ -13,7 +13,7 @@
     :license: BSD, see LICENSE for details.
 """
 
-from __future__ import print_function
+
 
 
 MODULES = {'basic': ('_G',
@@ -147,7 +147,7 @@ MODULES = {'basic': ('_G',
 if __name__ == '__main__':  # pragma: no cover
     import re
     try:
-        from urllib import urlopen
+        from urllib.request import urlopen
     except ImportError:
         from urllib.request import urlopen
     import pprint
@@ -213,7 +213,7 @@ if __name__ == '__main__':  # pragma: no cover
         return functions
 
     def get_function_module(name):
-        for mod, cb in module_callbacks().items():
+        for mod, cb in list(module_callbacks().items()):
             if cb(name):
                 return mod
         if '.' in name:

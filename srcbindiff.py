@@ -18,12 +18,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from __future__ import print_function
+
 
 import os
 import sys
-import popen2
-import ConfigParser
+from subprocess import Popen, PIPE
+import configparser
 
 from exporters.base_support import is_source_file, is_header_file
 
@@ -53,15 +53,17 @@ class CSBDProject:
 
   def resolve_clang_includes(self):
     cmd = "clang -print-file-name=include"
-    rfd, wfd = popen2.popen2(cmd)
-    return rfd.read().strip("\n")
+    p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, close_fds=True)
+    rfd = p.stdout
+    wfd = p.stdin
+    return rfd.read().decode('utf-8').strip("\n")
 
   def create_project(self, path, project_file):
     if os.path.exists(project_file):
       print("Project file %s already exists." % repr(project_file))
       return False
 
-    config = ConfigParser.RawConfigParser()
+    config = configparser.RawConfigParser()
     config.optionxform = str
 
     # Add the CLang specific configuration section
@@ -96,7 +98,7 @@ class CSBDProject:
             filename = '"%s"' % filename
           config.set(section, filename, "1")
 
-    with open(project_file, "wb") as configfile:
+    with open(project_file, "w+") as configfile:
       configfile.write("#"*len(SBD_PROJECT_COMMENT) + "\n")
       configfile.write(SBD_PROJECT_COMMENT + "\n")
       configfile.write("#"*len(SBD_PROJECT_COMMENT) + "\n")
@@ -159,7 +161,7 @@ def main():
   use_clang = True
   project_file = DEFAULT_PROJECT_FILE
   next_project_name = False
-  parallel = True
+  parallel = False
   analyze_headers = False
 
   for arg in sys.argv[1:]:

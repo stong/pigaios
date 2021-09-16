@@ -18,19 +18,19 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 """
-from __future__ import print_function
+
 
 import os
 import sys
 import base64
 
-from itertools import imap
+
 
 try:
     from fasttoad_wrap import modsum
 except:
     def modsum(buf):
-        return sum(imap(ord, buf)) % 255
+        return sum(map(ord, buf)) % 255
 
 try:
     import psyco
@@ -84,7 +84,7 @@ class CKoretFuzzyHashing:
         m = max(len(sign1), len(sign2))
         distance = 0
         
-        for c in xrange(0, m):
+        for c in range(0, m):
             if sign1[c:c+1] != sign2[c:c+1]:
                 distance += 1
         
@@ -99,9 +99,9 @@ class CKoretFuzzyHashing:
         buf = []
         reduce_errors = self.reduce_errors
         # Adjust the output to the desired output size
-        for c in xrange(0, output_size):
+        for c in range(0, output_size):
             tmp = bytes[c*size:(c*size+1)+bsize]
-            ret = sum(imap(ord, tmp)) % 255
+            ret = sum(map(ord, tmp)) % 255
             if reduce_errors:
                 if ret != 255 and ret != 0:
                     buf.append(chr(ret))
@@ -143,11 +143,11 @@ class CKoretFuzzyHashing:
                 break
         
         ret = "".join(ret)
-        size = len(ret) / output_size
+        size = len(ret) // output_size
         buf = []
         
         # Adjust the output to the desired output size
-        for c in xrange(0, output_size):
+        for c in range(0, output_size):
             if aggresive:
                 buf.append(ret[c:c+size+1][ignore_range:ignore_range+1])
             else:
@@ -162,9 +162,9 @@ class CKoretFuzzyHashing:
                 buf += x
                 break
             
-        ret = "".join(buf)
+        ret = "".join(buf).encode('utf-8')
         
-        return base64.b64encode(ret).strip("=")[:output_size]
+        return base64.b64encode(ret).decode('utf-8').strip("=")[:output_size]
 
     def _fast_hash(self, bytes, aggresive = False):
         i = -1
@@ -178,7 +178,7 @@ class CKoretFuzzyHashing:
         while i < output_size:
             i += 1
             buf = bytes[i*bsize:(i+1)*bsize]
-            char = sum(imap(ord, buf)) % 255
+            char = sum(map(ord, buf)) % 255
             if self.reduce_errors:
                 if char != 255 and char != 0:
                     radd(chr(char))
@@ -214,7 +214,7 @@ class CKoretFuzzyHashing:
                 val = output_size
             
             buf = bytes[chunk_size:chunk_size+val]
-            byte = self.xor(imap(ord, buf)) % 255
+            byte = self.xor(map(ord, buf)) % 255
             byte = chr(byte)
             
             if byte != '\xff' and byte != '\x00':
@@ -225,7 +225,7 @@ class CKoretFuzzyHashing:
         ret = "".join(ret)
         buf = ""
         size = len(ret)/output_size
-        for n in xrange(0, output_size):
+        for n in range(0, output_size):
             buf += ret[n*size:(n*size)+1]
         
         return base64.b64encode(buf).strip("=")[:output_size]

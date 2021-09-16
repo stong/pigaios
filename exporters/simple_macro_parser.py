@@ -18,17 +18,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from __future__ import print_function
+
 import os
 import re
 import sys
 import decimal
 
-from SimpleEval import SimpleEval
-from kfuzzy import CKoretFuzzyHashing
+from .SimpleEval import SimpleEval
+from .kfuzzy import CKoretFuzzyHashing
 
 try:
-  long        # Python 2
+  int        # Python 2
 except NameError:
   long = int  # Python 3
 
@@ -68,7 +68,7 @@ class CMacroExtractor:
     kfh.output_size = 8
 
     fuzzy_hashes = {}
-    for key in d.keys():
+    for key in list(d.keys()):
       hash1, hash2, _ = kfh.hash_bytes(key).split(";")
       new_key = "%s-%s" % (hash1, hash2)
       if new_key in fuzzy_hashes:
@@ -91,7 +91,7 @@ class CMacroExtractor:
         if type(d[element]) is decimal.Decimal:
           eng_str = d[element].to_eng_string()
           if str(eng_str).find(".") == -1:
-            value = "0x%08x" % long(eng_str)
+            value = "0x%08x" % int(eng_str)
 
         if value is None:
           value = str(d[element])
@@ -106,7 +106,7 @@ class CMacroExtractor:
 
   def extract(self, filename):
     self.filename = filename
-    return self.extract_from_buffer(open(filename, "rb").read())
+    return self.extract_from_buffer(open(filename, "rb").read().decode('utf-8'))
 
   def extract_from_buffer(self, buf):
     ret = {}

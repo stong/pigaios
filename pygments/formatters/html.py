@@ -9,7 +9,7 @@
     :license: BSD, see LICENSE for details.
 """
 
-from __future__ import print_function
+
 
 import os
 import sys
@@ -29,11 +29,11 @@ __all__ = ['HtmlFormatter']
 
 
 _escape_html_table = {
-    ord('&'): u'&amp;',
-    ord('<'): u'&lt;',
-    ord('>'): u'&gt;',
-    ord('"'): u'&quot;',
-    ord("'"): u'&#39;',
+    ord('&'): '&amp;',
+    ord('<'): '&lt;',
+    ord('>'): '&gt;',
+    ord('"'): '&quot;',
+    ord("'"): '&#39;',
 }
 
 

@@ -25,10 +25,10 @@ import json
 import shlex
 import sqlite3
 import itertools
-import ConfigParser
+import configparser
 
 from threading import current_thread
-from terminalsize import get_terminal_size
+from .terminalsize import get_terminal_size
 
 from threading import Lock
 from multiprocessing.pool import Pool
@@ -183,13 +183,13 @@ def all_combinations(items):
 
 #-------------------------------------------------------------------------------
 def json_loads(line):
-  return json.loads(line.decode("utf-8","ignore"))
+  return json.loads(line)
 
 #-------------------------------------------------------------------------------
 def _pickle_method(method):
-  func_name = method.im_func.__name__
-  obj = method.im_self
-  cls = method.im_class
+  func_name = method.__func__.__name__
+  obj = method.__self__
+  cls = method.__self__.__class__
   return _unpickle_method, (func_name, obj, cls)
 
 def _unpickle_method(func_name, obj, cls):
@@ -203,15 +203,15 @@ def _unpickle_method(func_name, obj, cls):
 
   return func.__get__(obj, cls)
 
-import copy_reg
+import copyreg
 import types
-copy_reg.pickle(types.MethodType, _pickle_method, _unpickle_method)
+copyreg.pickle(types.MethodType, _pickle_method, _unpickle_method)
 
 #-------------------------------------------------------------------------------
 class CBaseExporter(object):
   def __init__(self, cfg_file):
     self.cfg_file = cfg_file
-    self.config = ConfigParser.ConfigParser()
+    self.config = configparser.ConfigParser()
     self.config.optionxform = str
     self.config.read(cfg_file)
     self.db = {}
@@ -234,7 +234,7 @@ class CBaseExporter(object):
   def create_schema(self, filename, remove = False):
     self.filename = filename
     if remove and os.path.exists(filename):
-      print("[i] Removing existing file %s" % filename)
+      print(("[i] Removing existing file %s" % filename))
       os.remove(filename)
 
     tid = current_thread().ident
@@ -653,7 +653,7 @@ class CBaseExporter(object):
       if int(self.config.get('GENERAL', 'inlines')) == 1:
         self.build_inlines(cur)
     except:
-      print("Error:", str(sys.exc_info()[1]))
+      print(("Error:", str(sys.exc_info()[1])))
 
     self.create_indexes(cur)
     cur.close()

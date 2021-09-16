@@ -42,18 +42,19 @@ from idaapi import (Choose2, PluginForm, Form, init_hexrays_plugin, load_plugin,
                     reg_write_string)
 
 import sourceimp_core
+import importlib
 
 try:
   reload           # Python 2
 except NameError:  # Python 3
   from importlib import reload
 
-reload(sourceimp_core)
+importlib.reload(sourceimp_core)
 
 from sourceimp_core import *
 
 import sourcexp_ida
-reload(sourcexp_ida)
+importlib.reload(sourcexp_ida)
 
 from sourcexp_ida import log, CBinaryToSourceExporter, VERSION_VALUE
 
@@ -278,8 +279,8 @@ class CDiffChooser(Choose2):
 
     for i, match in enumerate(matches):
       ea, name, heuristic, score, reason, ml, qr = matches[match]
-      bin_func_name = GetFunctionName(long(ea))
-      line = ["%03d" % i, "%05d" % match, name, "0x%08x" % long(ea), bin_func_name, str(score), str(ml), str((score + ml)/2), str(qr), heuristic, reason]
+      bin_func_name = GetFunctionName(int(ea))
+      line = ["%03d" % i, "%05d" % match, name, "0x%08x" % int(ea), bin_func_name, str(score), str(ml), str((score + ml)/2), str(qr), heuristic, reason]
       if _DEBUG:
         maybe_false_positive = int(seems_false_positive(name, bin_func_name))
         line.append(str(maybe_false_positive))
@@ -337,7 +338,7 @@ class CDiffChooser(Choose2):
   def OnSelectLine(self, n):
     self.selcount += 1
     row = self.items[n]
-    ea = long(row[3], 16)
+    ea = int(row[3], 16)
     if isEnabled(ea):
       jumpto(ea)
 
@@ -389,7 +390,7 @@ class CDiffChooser(Choose2):
       html_diff = CHtmlDiff()
       item = self.items[n]
 
-      src_id = long(item[1])
+      src_id = int(item[1])
       cur = self.differ.db.cursor()
 
       sql = "select source from src.functions where id = ?"
@@ -400,7 +401,7 @@ class CDiffChooser(Choose2):
         Warning("Cannot find the source function.")
         return False
 
-      ea = long(item[3], 16)
+      ea = int(item[3], 16)
       proto = self.differ.decompile_and_get(ea)
       if not proto:
         Warning("Cannot decompile function 0x%08x" % ea)
@@ -408,9 +409,9 @@ class CDiffChooser(Choose2):
 
       buf1 = indent_source(row[0].decode("utf-8", "ignore"))
       buf2 = proto
-      buf2 += u"\n".join(self.differ.pseudo[ea])
+      buf2 += "\n".join(self.differ.pseudo[ea])
       new_buf = indent_source(buf2)
-      src = html_diff.make_file(new_buf.split(u"\n"), buf1.split(u"\n"))
+      src = html_diff.make_file(new_buf.split("\n"), buf1.split("\n"))
 
       title = "Diff pseudo-source %s - %s" % (item[2], item[4])
       cdiffer = CHtmlViewer()
@@ -479,7 +480,7 @@ class CIDABinaryToSourceImporter(CBinaryToSourceImporter):
         else:
           ret = False
     except:
-      print("Error checking version: %s" % str(sys.exc_info()[1]))
+      print(("Error checking version: %s" % str(sys.exc_info()[1])))
       ret = True
 
     cur.close()

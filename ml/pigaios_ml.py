@@ -20,7 +20,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from __future__ import print_function
+
 
 #-------------------------------------------------------------------------------
 # Dear SciKit and NumPy developers: fuck you.
@@ -112,7 +112,7 @@ class CPigaiosMultiClassifier(object):
   def __init__(self, random_state=None):
     self.clfs = {}
     for classifier, name, args in ML_CLASSIFIERS:
-      has_seed = 'random_state' in dir(classifier.__init__.im_class())
+      has_seed = 'random_state' in dir(classifier.__init__.__self__.__class__())
       if has_seed:
         self.clfs[name] = classifier(random_state=random_state)
         for arg_name, arg_value in args:
@@ -124,7 +124,7 @@ class CPigaiosMultiClassifier(object):
 
   def fit(self, X, y):
     threads = []
-    for clf in self.clfs.values():
+    for clf in list(self.clfs.values()):
       print("Fitting", clf)
       t = threading.Thread(target=clf.fit, args=(X, y))
       t.start()
@@ -135,7 +135,7 @@ class CPigaiosMultiClassifier(object):
 
   def predict(self, input_val):
     ret = []
-    for clf in self.clfs.values():
+    for clf in list(self.clfs.values()):
       tmp = clf.predict(input_val).item()
       tmp = round(float(tmp), 2)
       ret.append(min(tmp, 1.0))
@@ -154,7 +154,7 @@ class CPigaiosMultiClassifier(object):
 
   def predict_proba(self, input_val):
     ret = []
-    for clf in self.clfs.values():
+    for clf in list(self.clfs.values()):
       ret.append(clf.predict_proba(input_val)[0][1])
     return sum(ret) / len(ret)
 
@@ -178,7 +178,7 @@ class CPigaiosClassifier:
       next(reader, None)
       for row in reader:
         is_match = row[2]
-        x_values.append(map(float, row[3:]))
+        x_values.append(list(map(float, row[3:])))
         y_values.append([float(is_match)])
 
     return np.array(x_values), np.array(y_values)

@@ -9,7 +9,7 @@
     :license: BSD, see LICENSE for details.
 """
 
-from __future__ import division
+
 
 from pygments.formatter import Formatter
 from pygments.lexer import Lexer
@@ -266,7 +266,7 @@ class LatexFormatter(Formatter):
             self.right = self.escapeinside[1]
         else:
             self.escapeinside = ''
-        self.envname = options.get('envname', u'Verbatim')
+        self.envname = options.get('envname', 'Verbatim')
 
         self._create_stylesheet()
 
@@ -337,24 +337,24 @@ class LatexFormatter(Formatter):
             realoutfile = outfile
             outfile = StringIO()
 
-        outfile.write(u'\\begin{' + self.envname + u'}[commandchars=\\\\\\{\\}')
+        outfile.write('\\begin{' + self.envname + '}[commandchars=\\\\\\{\\}')
         if self.linenos:
             start, step = self.linenostart, self.linenostep
-            outfile.write(u',numbers=left' +
-                          (start and u',firstnumber=%d' % start or u'') +
-                          (step and u',stepnumber=%d' % step or u''))
+            outfile.write(',numbers=left' +
+                          (start and ',firstnumber=%d' % start or '') +
+                          (step and ',stepnumber=%d' % step or ''))
         if self.mathescape or self.texcomments or self.escapeinside:
-            outfile.write(u',codes={\\catcode`\\$=3\\catcode`\\^=7\\catcode`\\_=8}')
+            outfile.write(',codes={\\catcode`\\$=3\\catcode`\\^=7\\catcode`\\_=8}')
         if self.verboptions:
-            outfile.write(u',' + self.verboptions)
-        outfile.write(u']\n')
+            outfile.write(',' + self.verboptions)
+        outfile.write(']\n')
 
         for ttype, value in tokensource:
             if ttype in Token.Comment:
                 if self.texcomments:
                     # Try to guess comment starting lexeme and escape it ...
                     start = value[0:1]
-                    for i in xrange(1, len(value)):
+                    for i in range(1, len(value)):
                         if start[0] != value[i]:
                             break
                         start += value[i]
@@ -410,7 +410,7 @@ class LatexFormatter(Formatter):
             else:
                 outfile.write(value)
 
-        outfile.write(u'\\end{' + self.envname + u'}\n')
+        outfile.write('\\end{' + self.envname + '}\n')
 
         if self.full:
             realoutfile.write(DOC_TEMPLATE %

@@ -25,9 +25,9 @@ from threading import current_thread
 import clang.cindex
 from clang.cindex import Diagnostic, CursorKind, TokenKind
 
-from base_support import *
-from SimpleEval import simple_eval
-from simple_macro_parser import CMacroExtractor
+from .base_support import *
+from .SimpleEval import simple_eval
+from .simple_macro_parser import CMacroExtractor
 
 #-------------------------------------------------------------------------------
 CONDITIONAL_OPERATORS = ["==", "!=", "<", ">", ">=", "<=", "?"]
@@ -93,7 +93,7 @@ def dump_ast(cursor, level = 0):
   if token is not None:
     token = token.spelling
 
-  print("  "*level, cursor.kind, repr(cursor.spelling), repr(token), cursor.type.spelling, cursor.location)
+  print(("  "*level, cursor.kind, repr(cursor.spelling), repr(token), cursor.type.spelling, cursor.location))
   for children in cursor.get_children():
     dump_ast(children, level+1)
 
@@ -360,8 +360,8 @@ class CLangParser:
 
       # Same as before but we pass to the member any literal expression.
       method_name = 'visit_LITERAL'
-      if children.kind >= CursorKind.INTEGER_LITERAL and \
-           children.kind <= CursorKind.STRING_LITERAL:
+      if children.kind.from_param() >= CursorKind.INTEGER_LITERAL.from_param() and \
+           children.kind.from_param() <= CursorKind.STRING_LITERAL.from_param():
         if method_name in dir(obj):
           func = getattr(obj, method_name)
           if func(children):
@@ -386,7 +386,7 @@ class CClangExporter(CBaseExporter):
     start_loc = cursor.location
     filename = start_loc.file.name
     if filename not in self.source_cache:
-      self.source_cache[filename] = open(filename, "rb").readlines()
+      self.source_cache[filename] = open(filename, "r").readlines()
 
     source = "".join(self.source_cache[filename][start_line-1:end_line])
     return source
@@ -405,7 +405,7 @@ class CClangExporter(CBaseExporter):
 
   def strip_macros(self, filename):
     ret = []
-    for line in open(filename, "rb").readlines():
+    for line in open(filename, "r").readlines():
       line = line.strip("\r").strip("\n")
       if line.find("#include") == -1 and line.strip(" ").strip("\t").strip(" ").startswith("#"):
         ret.append("// stripped: %s" % line)
@@ -654,7 +654,7 @@ class CClangExporter(CBaseExporter):
           args = (obj.name, prototype, prototype2, obj.conditions,
                   len(obj.constants), json_dump(list(obj.constants)),
                   obj.loops, len(obj.switches), json_dump(list(obj.switches)),
-                  len(obj.calls.keys()), len(obj.externals),
+                  len(list(obj.calls.keys())), len(obj.externals),
                   filename, json_dump(obj.calls), source, obj.recursive,
                   len(obj.indirects), len(obj.globals_uses), obj.is_inlined,
                   obj.is_static, basename(filename).lower(), )

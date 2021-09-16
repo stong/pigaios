@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 
-from __future__ import print_function
+
 
 import os
 import sys
@@ -11,7 +11,7 @@ import sqlite3
 import numpy as np
 
 try:
-  long        # Python 2
+  int        # Python 2
 except NameError:
   long = int  # Python 3
 
@@ -152,7 +152,7 @@ class CPigaiosTrainer:
               ret["function_name_maybe_in_guesses"] = 1
       elif field == "switchs_json":
         ret[field] = int(row["src_%s" % field] == row["bin_%s" % field])
-      elif type(row["src_%s" % field]) in (int, long):
+      elif type(row["src_%s" % field]) in (int, int):
         ret["src_%s" % field] = int(row["src_%s" % field])
         ret["bin_%s" % field] = int(row["bin_%s" % field])
         ret["%s_diff" % field] = abs(row["src_%s" % field] - row["bin_%s" % field])
@@ -214,7 +214,7 @@ class CPigaiosTrainer:
       ret = self.get_compare_functions_data(row, src_id, bin_id, 0)
       if ret is not None:
         if header is None:
-          header = ret.keys()
+          header = list(ret.keys())
           header.sort()
 
         tmp = [row["src_name"], row["bin_name"]]

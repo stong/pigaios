@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from __future__ import print_function
+
 
 import re
 import os
@@ -287,7 +287,7 @@ def constant_filter(value):
     return False
 
   #no single bits sets - mostly defines / flags
-  for i in xrange(64):
+  for i in range(64):
     if value == (1 << i):
       return False
 
@@ -469,13 +469,13 @@ class CBinaryToSourceExporter:
         # returned object is not iterable.
         can_iter = False
         switch_cases_values = set()
-        for idx in xrange(len(results.cases)):
+        for idx in range(len(results.cases)):
           cur_case = results.cases[idx]
           if not '__iter__' in dir(cur_case):
             break
 
           can_iter |= True
-          for cidx in xrange(len(cur_case)):
+          for cidx in range(len(cur_case)):
             case_id = cur_case[cidx]
             switch_cases_values.add(case_id)
 

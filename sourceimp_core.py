@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from __future__ import print_function
+
 
 import os
 import sys
@@ -28,6 +28,7 @@ import difflib
 import sqlite3
 
 from others.py3compat import INTEGER_TYPES
+import importlib
 
 try:
   reload           # Python 2
@@ -45,7 +46,7 @@ try:
   import numpy as np
 
   from ml import pigaios_ml
-  reload(pigaios_ml)
+  importlib.reload(pigaios_ml)
 
   from ml.pigaios_ml import CPigaiosClassifier, CPigaiosMultiClassifier
   has_ml = True
@@ -53,7 +54,7 @@ except ImportError:
   has_ml = False
 
 try:
-  long        # Python 2
+  int        # Python 2
 except NameError:
   long = int  # Python 3
 
@@ -235,8 +236,8 @@ class CBinaryToSourceImporter:
         src_total = len(src_json)
         bin_total = len(bin_json)
 
-        src_json = map(repr, src_json)
-        bin_json = map(repr, bin_json)
+        src_json = list(map(repr, src_json))
+        bin_json = list(map(repr, bin_json))
 
         s1 = set(src_json)
         s2 = set(bin_json)
@@ -251,7 +252,7 @@ class CBinaryToSourceImporter:
         raise Exception("Unknow data type for field %s" % field)
 
     tmp = []
-    header = ret.keys()
+    header = list(ret.keys())
     header.sort()
 
     for key in ML_FIELDS_ORDER:
@@ -282,7 +283,7 @@ class CBinaryToSourceImporter:
           self.ml_classifier = CPigaiosClassifier()
           self.ml_model = self.ml_classifier.load_model()
 
-        line = map(float, line)
+        line = list(map(float, line))
         ml = self.ml_model.predict_proba(np.array(line).reshape(1, -1))
 
     fields = COMPARE_FIELDS
@@ -459,7 +460,7 @@ class CBinaryToSourceImporter:
     score *= HEURISTICS[heuristic]
 
     qr = 0.0
-    ea = long(bin_row["ea"])
+    ea = int(bin_row["ea"])
     decomp = self.decompile(ea)
     if decomp is not None and decomp != False:
       source_code = src_row["source"]
@@ -534,7 +535,7 @@ class CBinaryToSourceImporter:
           matches_count[row[1]] = 1
 
       for row in rows:
-        func_ea = long(row[0])
+        func_ea = int(row[0])
         match_name = row[1]
         match_id = row[2]
         bin_id = row[3]
@@ -586,7 +587,7 @@ class CBinaryToSourceImporter:
           break
 
         size += 1
-        func_ea = long(row[0])
+        func_ea = int(row[0])
         match_name = row[1]
         match_id = row[2]
         bin_id = row[3]
@@ -772,7 +773,7 @@ class CBinaryToSourceImporter:
         if bin_rows:
           if len(bin_rows) * len(src_rows) > self.max_cartesian_product:
             msg = "Cartesian product finding %ss for SRC=%d/BIN=0x%08x(%s) too big (%d)..."
-            log(msg % (call_type, src_id, long(bin_ea), row["name"], len(bin_rows) * len(src_rows)))
+            log(msg % (call_type, src_id, int(bin_ea), row["name"], len(bin_rows) * len(src_rows)))
           elif len(bin_rows) > 0:
             if _DEBUG: print("Finding matches in a cartesian product of %d x %d row(s)" % (len(src_rows), len(bin_rows)))
             for src_row in src_rows:
@@ -784,7 +785,7 @@ class CBinaryToSourceImporter:
                 score, reasons, ml, qr = self.compare_functions(src_row[call_type], curr_bin_id, CALLGRAPH_MATCH)
                 if score >= min_level:
                   func_name = self.get_source_func_name(src_row[call_type])
-                  self.add_match(long(src_row[call_type]), bin_row[call_type],
+                  self.add_match(int(src_row[call_type]), bin_row[call_type],
                                  func_name, "Callgraph match (%s, iteration %d)" % (call_type, iteration),
                                  score, reasons, ml, qr)
 
@@ -798,7 +799,7 @@ class CBinaryToSourceImporter:
       cur_execute(cur, sql, (str(ea), ))
       row = cur.fetchone()
       if row is not None:
-        bin_id = long(row["id"])
+        bin_id = int(row["id"])
         src_id = match_id
 
         src_sql = "select * from  src.functions where id = ? + ?"
@@ -889,7 +890,7 @@ class CBinaryToSourceImporter:
         continue
 
       ea, func, heur, score, reasons, ml, qr = self.best_matches[src_id]
-      bin_func_name = self.get_function_name(long(ea))
+      bin_func_name = self.get_function_name(int(ea))
       if score <= level or seems_false_positive(func, bin_func_name):
         if _DEBUG: self.dubious_matches[src_id] = self.best_matches[src_id]
         del self.best_matches[src_id]
