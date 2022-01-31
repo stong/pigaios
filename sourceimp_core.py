@@ -137,7 +137,12 @@ def seems_false_positive(src_name, bin_name):
 
 #-------------------------------------------------------------------------------
 def json_loads(line):
-  return json.loads(line.decode("utf-8","ignore"))
+  if isinstance(line, str):
+    return json.loads(line)
+  elif isinstance(line, bytes):
+    return json.loads(line.decode("utf-8","ignore"))
+  else:
+    raise ValueError("wtf?", type(line), line)
 
 #-------------------------------------------------------------------------------
 PROFILING = os.getenv("DIAPHORA_PROFILE") is not None

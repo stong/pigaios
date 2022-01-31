@@ -140,8 +140,8 @@ NOT_FUNCTION_NAMES = ["copyright", "char", "bool", "int", "unsigned", "long",
   ]
 
 #-------------------------------------------------------------------------------
-def log(msg):
-  Message("[%s] %s\n" % (time.asctime(), msg))
+def log(_msg):
+  msg("[%s] %s\n" % (time.asctime(), _msg))
 
 #-----------------------------------------------------------------------------
 def basename(path):
@@ -181,7 +181,7 @@ def get_source_strings(min_len = 4, strtypes = [0, 1]):
                 src_langs[key] = 1
 
           for ref in refs:
-            d[full_path].append([ref, GetFunctionName(ref), str(s)])
+            d[full_path].append([ref, get_func_name(ref), str(s)])
 
   return d, src_langs, total_files, strings
 
@@ -209,7 +209,7 @@ def guess_function_names(strings_list):
           func = get_func(ref)
           if func is not None:
             found = True
-            key = func.startEA
+            key = func.start_ea
 
             try:
               rarity[candidate].add(key)
@@ -228,8 +228,8 @@ def guess_function_names(strings_list):
       if len(rarity[candidate]) == 1:
         candidates.add(candidate)
 
-    func_name = GetFunctionName(key)
-    tmp = Demangle(func_name, INF_SHORT_DN)
+    func_name = get_func_name(key)
+    tmp = idc.demangle_name(func_name, INF_SHORT_DN)
     if tmp is not None:
       func_name = tmp
 
@@ -258,7 +258,7 @@ def diaphora_decode(ea):
 
 #-------------------------------------------------------------------------------
 def is_conditional_branch_or_jump(ea):
-  mnem = GetMnem(ea)
+  mnem = idc.print_insn_mnem(ea)
   if not mnem or mnem == "":
     return False
 
@@ -431,8 +431,8 @@ class CBinaryToSourceExporter:
         if is_constant(oper, ea) and constant_filter(oper.value):
           constants.add(oper.value)
 
-    seg_start_ea = SegStart(ea)
-    seg_end_ea   = SegEnd(ea)
+    seg_start_ea = idc.get_segm_start(ea)
+    seg_end_ea   = idc.get_segm_end(ea)
     globals_uses = set()
 
     drefs = list(DataRefsFrom(ea))
@@ -445,12 +445,12 @@ class CBinaryToSourceExporter:
           if dref in self.names:
             externals.add(self.names[dref])
           else:
-            tmp = GetFunctionName(dref)
+            tmp = get_func_name(dref)
             if not tmp:
               tmp = "0x%x" % dref
             externals.add(tmp)
 
-          str_constant = GetString(dref, -1, -1)
+          str_constant = idc.get_strlit_contents(dref, -1, -1)
           if str_constant is not None:
             if len(str_constant) > 1:
               #print("0x%x: %s" % (ea, repr(str_constant)))
@@ -491,10 +491,10 @@ class CBinaryToSourceExporter:
       return None
 
     # Variables that will be stored in the database
-    func_name = GetFunctionName(f)
-    prototype = GetType(f)
+    func_name = get_func_name(f)
+    prototype = idc.get_type(f)
     if prototype is None:
-      prototype = GuessType(f)
+      prototype = idc.guess_type(f)
 
     if self.hooks is not None:
       ret = self.hooks.before_export_function(f, func_name)
@@ -502,7 +502,7 @@ class CBinaryToSourceExporter:
         return ret
 
     prototype2 = None
-    ti = GetTinfo(f)
+    ti = idc.get_tinfo(f)
     if ti:
       prototype2 = idc_print_type(ti[0],ti[1], func_name, PRTYPE_1LINE)
 
@@ -521,28 +521,28 @@ class CBinaryToSourceExporter:
     bb_relations = {}
 
     # Iterate through each basic block
-    ea = func.startEA
+    ea = func.start_ea
     flow = FlowChart(func)
     for block in flow:
-      block_ea = block.startEA
-      if block.endEA == 0 or block_ea == BADADDR:
+      block_ea = block.start_ea
+      if block.end_ea == 0 or block_ea == BADADDR:
         continue
 
       # ...and each instruction on each basic block
-      for ea in list(Heads(block.startEA, block.endEA)):
+      for ea in list(Heads(block.start_ea, block.end_ea)):
         # Remember the relationships
         bb_relations[block_ea] = []
 
         # Iterate the succesors of this basic block
         for succ_block in block.succs():
-          bb_relations[block_ea].append(succ_block.startEA)
+          bb_relations[block_ea].append(succ_block.start_ea)
 
         # Iterate the predecessors of this basic block
         for pred_block in block.preds():
           try:
-            bb_relations[pred_block.startEA].append(block.startEA)
+            bb_relations[pred_block.start_ea].append(block.start_ea)
           except KeyError:
-            bb_relations[pred_block.startEA] = [block.startEA]
+            bb_relations[pred_block.start_ea] = [block.start_ea]
 
         # Get the conditionals
         is_cond = is_conditional_branch_or_jump(ea)
@@ -561,14 +561,14 @@ class CBinaryToSourceExporter:
         # Get the calls
         xrefs = list(CodeRefsFrom(ea, 0))
         if len(xrefs) == 1:
-          tmp_func = GetFunctionName(xrefs[0])
+          tmp_func = get_func_name(xrefs[0])
           if tmp_func not in BANNED_FUNCTIONS and ".%s" % tmp_func not in BANNED_FUNCTIONS:
             func_obj = get_func(xrefs[0])
             if func_obj is not None:
-              if func_obj.startEA != func.startEA:
+              if func_obj.start_ea != func.start_ea:
                 tmp_ea = xrefs[0]
                 calls.add(tmp_ea)
-                name = GetFunctionName(tmp_ea)
+                name = get_func_name(tmp_ea)
                 try:
                   callees[name] += 1
                 except:
@@ -675,7 +675,7 @@ class CBinaryToSourceExporter:
       for ea, func_name, str_data in d[full_path]:
         func = get_func(ea)
         if func:
-          cur.execute(sql, (full_path, source_file, str(func.startEA),))
+          cur.execute(sql, (full_path, source_file, str(func.start_ea),))
     cur.close()
 
   def save_guessed_function_names(self, strings):
@@ -698,8 +698,8 @@ class CBinaryToSourceExporter:
       i = 0
       t = time.time()
 
-      start_ea = MinEA()
-      end_ea   = MaxEA()
+      start_ea = inf_get_min_ea()
+      end_ea   = inf_get_max_ea()
       if self.hooks is not None:
         start_ea, end_ea = self.hooks.get_export_range()
 
